@@ -2,6 +2,7 @@
 #define UART_H
 
 #include <stdint.h>
+#include <Arduino_UNO_sys.h>
 
 // registers
 #define UDR0  	(*((volatile uint8_t *) 0xc6U))  // data register
@@ -25,21 +26,25 @@
 #define TXCN			6
 #define UDREN			5
 // Mode
-#define USART_ASYNC_MODE	0
-// Baud Rates
-#define BAUD_RATE_9600  12U // this value is only valid when system clock is 1 MHz (after clock division) and UBRRN = 1 
+#define USART_ASYNC_MODE	(0)
+// Baud Rates when U2Xn = 1 (async mode)
+#define SYS_CLK_1MHZ_BAUD_RATE_9600  (12U) // this value is only valid when system clock is 1 MHz (after clock division) 
+
+#if(SYSTEM_CLK_FREQ_MHZ == 16U)
+#define SYS_CLK_16MHZ_BAUD_RATE_9600 (207U)
+#endif 
 
 // general
-#define ENABLE  1
-#define DISABLE 0
+#define ENABLE  (1)
+#define DISABLE (0)
 
 #define TX_UDREN_FLAG	(1<< UDREN)
 #define TX_READY		(1<<TXCN)
 
 // API Prototypes
-void txConfig(void);
-void setTxMode (uint8_t EnableOrDisable);
-void sendData( uint8_t * data, uint8_t len);
+void uart_txConfig(void);
+void uart_setTxMode(uint8_t EnableOrDisable);
+void uart_sendData( uint8_t * data, uint8_t len);
 
 
 #endif

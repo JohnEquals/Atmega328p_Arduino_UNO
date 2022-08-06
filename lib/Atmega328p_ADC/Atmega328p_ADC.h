@@ -7,6 +7,10 @@
 #define SET     1
 #define RESET   0
 
+// macros for ADC resolution range
+#define ADC_MAX_VALUE   (1023U)
+#define ADC_MIN_VALUE   (0U)
+
 /*
  *  Register Bitfield Definitions
 */
@@ -83,8 +87,9 @@ typedef struct{
 #define DIV_BY_128  7
 
 // Voltage reference selection
-#define AREF    0
-#define AVCC    1
+#define AREF    0   // sets voltage ref to AREF with internal V_ref turned off.  We can input some voltage to AREF pin to serve as voltage reference.
+#define AVCC    1   // AVCC = 5V voltage ref (can measure AREF voltage to confirm)
+#define INTERNAL_VOLTAGE_1_1 3   // sets to internal voltage = 1.1V (confirm by measuring AREF voltage)
 
 // TODO: Function(s) for processing ADC
 // TODO: Function for setting up ADC
@@ -92,6 +97,8 @@ typedef struct{
 void adcConfig(void);
 
 uint16_t adcConvert(void);
+
+uint16_t adcValueToVoltage(uint16_t adcValue);
 // TODO:  Cofigure ADC and write function to grab data from ADC data reg. 
 
 #endif 

@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "power.h": "c",
+        "lcd_1602a.h": "c",
+        "stdint.h": "c",
+        "io.h": "c",
+        "interrupt.h": "c",
+        "atmega328p_sys.h": "c"
+    }
+}

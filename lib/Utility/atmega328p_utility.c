@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include "atmega328p_utility.h"
-#include "atmega328p_TIM.h"
 
 void my_delay(void){
 	// Note: int is 16 bits on ATMEGA328P (8-bit mcu)

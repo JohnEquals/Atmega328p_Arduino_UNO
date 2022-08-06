@@ -1,7 +1,7 @@
 #include "UART.h"
 #include <stdint.h>
 
-void txConfig(void){
+void uart_txConfig(void){
 	// set async mode
 	UCSR0C &= ~(3 << UMSELN);
 	// disable parity mode
@@ -19,13 +19,12 @@ void txConfig(void){
 	// set double UART tx speed
 	UCSR0A |= 1 << U2XN;
 	// set baud rate to 9600 bps
-	UBRR0 = (uint16_t) BAUD_RATE_9600;
-
+	UBRR0 = SYS_CLK_16MHZ_BAUD_RATE_9600;    
 }
 
 
 // enable Tx mode only after finishing configuring USART
-void setTxMode (uint8_t EnableOrDisable){
+void uart_setTxMode (uint8_t EnableOrDisable){
 	if(EnableOrDisable == ENABLE)
 		UCSR0B |= 1 << TXENN; 
 	else if(EnableOrDisable == DISABLE)
@@ -33,7 +32,7 @@ void setTxMode (uint8_t EnableOrDisable){
 } 
 
 // send data over UART
-void sendData( uint8_t * data, uint8_t len){
+void uart_sendData( uint8_t * data, uint8_t len){
 	// wait until transmit buffer ready to receive new data
 	while(len > 0){
 		while(!(UCSR0A & TX_UDREN_FLAG));
