@@ -15,7 +15,7 @@
                                 cli(); \
                                 }while(0))
 
-#
+
 // DHT11 data pin - PB0 - D8
 #define DHT11_DATA_PIN  (0)         // Port D4-D9
 #define DHT11_DATA_PORT (PORT_B)

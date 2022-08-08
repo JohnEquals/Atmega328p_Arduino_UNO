@@ -66,12 +66,17 @@
 #define TIM_DIV_BY_1024	    5U
 		
 // Timer range
-#define TIMER0_MAX_VALUE (255U)
-#define TIMER0_MIN_VALUE (0U)
-#define TIMER1_MAX_VALUE (65535U)
-#define TIMER1_MIN_VALUE (0U)
-#define TIMER2_MAX_VALUE (255U)
-#define TIMER2_MIN_VALUE (0U)
+#define TIMER_8BIT_MAX_VALUE (255U)
+#define TIMER_8BIT_MIN_VALUE (0U)
+#define TIMER_16BIT_MAX_VALUE (65535U)
+#define TIMER_16BIT_MIN_VALUE (0U)
+
+
+// timer interrupt flags
+#define TIM_INTERRUPT_INPUT_CAPTURE_FLAG    (5)
+#define TIM_INTERRUPT_OUTPUT_CMP_B_FLAG     (2)
+#define TIM_INTERRUPT_OUTPUT_CMP_A_FLAG     (1)
+#define TIM_INTERRUPT_OVERFLOW_FLAG         (0)
 
 // register bitfield bitmasks
 #define TIM_TCCR0B_CS_MSK    ((1 << CS02) | (1 << CS01) | (1 << CS00))
@@ -98,6 +103,11 @@ typedef struct
 
 //TODO: update APIs
 sys_err_e_t tim0_init(tim_config_handle_t * htim0);
+
+sys_err_e_t tim0_set_count(uint8_t tick_count);
+inline uint8_t tim0_get_count(void);
+sys_err_e_t tim0_config_interrupt(uint8_t tim0_interrupt_mask_position, _Bool interrupt_state);
+
 sys_err_e_t tim1_init(tim_config_handle_t * htim1);
 sys_err_e_t tim2_init(tim_config_handle_t * htim2);
 

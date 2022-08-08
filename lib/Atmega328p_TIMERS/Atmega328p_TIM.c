@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <formulas.h>
 #include <avr\interrupt.h>
+#include <string.h>
 
 #define GET_PRESCALE_VALUE(cs_bits)     ( \
                                         (cs_bits==CLK_NO_PRESCALE)?1U:\
@@ -68,11 +69,29 @@
                                                     (prescaler == TIM_DIV_BY_1024)\
                                                     )
 
+#define ASSERT_TIMER_INTERRUPT_FLAG(flag)           (\
+                                                    (TIM_INTERRUPT_INPUT_CAPTURE_FLAG == flag)||\
+                                                    (TIM_INTERRUPT_OUTPUT_CMP_B_FLAG == flag)||\
+                                                    (TIM_INTERRUPT_OUTPUT_CMP_A_FLAG == flag)||\
+                                                    (TIM_INTERRUPT_OVERFLOW_FLAG == flag)\
+                                                    )
+
+#define ASSERT_8BIT_TIMER_COUNT(counts)             (\
+                                                    (TIMER_8BIT_MAX_VALUE >= counts)&&\
+                                                    (TIMER_8BIT_MIN_VALUE <= counts)\
+                                                    )
+
+#define ASSERT_16BIT_TIMER_COUNT(counts)             (\
+                                                    (TIMER_16BIT_MAX_VALUE >= counts)&&\
+                                                    (TIMER_16BIT_MIN_VALUE <= counts)\
+                                                    )
+
+
 #ifndef F_CPU
 #define F_CPU   (16000000L) 
 #endif
 
-#define ASSERT_PWM_FREQUENCY(frequency)             ((frequency >= 0)||(frequency <= F_CPU))
+#define ASSERT_PWM_FREQUENCY(frequency)             ((frequency >= 0) && (frequency <= F_CPU))
     
 
 #define ENABLE_TIM1    (PRR &= ~(1<< PRTIM1))
@@ -204,9 +223,52 @@ sys_err_e_t tim0_init(tim_config_handle_t * htim0)
     TCCR0B = temp_reg2; 
 
     SREG = sreg_data;
-    sei();
 
     return SYS_STATUS_OK;
+}
+
+sys_err_e_t tim0_config_interrupt(uint8_t tim0_interrupt_mask_position, _Bool interrupt_state)
+{
+    if(!ASSERT_TIMER_INTERRUPT_FLAG(tim0_interrupt_mask_position))
+    {
+        return SYS_ERROR_TIM0_INIT_INPUT_INVALID_INTERRUPT_FLAG;
+    }
+
+    if((TIM_INTERRUPT_OVERFLOW_FLAG == tim0_interrupt_mask_position)||\
+       (TIM_INTERRUPT_OUTPUT_CMP_A_FLAG == tim0_interrupt_mask_position)||\
+       (TIM_INTERRUPT_OUTPUT_CMP_B_FLAG == tim0_interrupt_mask_position))
+    {
+        if(interrupt_state)
+        {
+            TIMSK0 |= (1<<tim0_interrupt_mask_position);
+        }
+        else
+        {
+            TIMSK0 &= ~(1<<tim0_interrupt_mask_position);
+        }
+    }
+    return SYS_STATUS_OK;
+}
+
+sys_err_e_t tim0_set_count(uint8_t tick_count)
+{
+    if(!ASSERT_8BIT_TIMER_COUNT(tick_count))
+    {
+        return SYS_ERROR_TIM0_INPUT_INVALID_COUNT_OUT_OF_RANGE;
+    }
+    // save clock settings and temporarily turn off timer 
+    uint8_t clock_prescaler_setting = TCCR0B & TIM_TCCR0B_CS_MSK;
+    TCCR0B &= ~TIM_TCCR0B_CS_MSK;
+
+    TCNT0 =  tick_count;
+    
+    TCCR0B |= clock_prescaler_setting;
+    return SYS_STATUS_OK;
+}
+
+inline uint8_t tim0_get_count(void)
+{
+    return TCNT0;
 }
 
 sys_err_e_t tim1_init(tim_config_handle_t * htim1)
@@ -363,8 +425,30 @@ sys_err_e_t tim1_init(tim_config_handle_t * htim1)
     TCCR1B = temp_reg2; 
 
     SREG = sreg_data;
-    sei();
 
+    return SYS_STATUS_OK;
+}
+
+sys_err_e_t tim1_config_interrupt(uint8_t tim1_interrupt_mask_position, _Bool interrupt_state)
+{
+    if(!ASSERT_TIMER_INTERRUPT_FLAG(tim1_interrupt_mask_position))
+    {
+        return SYS_ERROR_TIM1_INIT_INPUT_INVALID_INTERRUPT_FLAG;
+    }
+
+    if((TIM_INTERRUPT_OVERFLOW_FLAG == tim1_interrupt_mask_position)||\
+       (TIM_INTERRUPT_OUTPUT_CMP_A_FLAG == tim1_interrupt_mask_position)||\
+       (TIM_INTERRUPT_OUTPUT_CMP_B_FLAG == tim1_interrupt_mask_position))
+    {
+        if(interrupt_state)
+        {
+            TIMSK1 |= (1<<tim1_interrupt_mask_position);
+        }
+        else
+        {
+            TIMSK1 &= ~(1<<tim1_interrupt_mask_position);
+        }
+    }
     return SYS_STATUS_OK;
 }
 
@@ -482,7 +566,24 @@ sys_err_e_t tim2_init(tim_config_handle_t * htim2)
 
 
     SREG = sreg_data;
-    sei();
 
     return SYS_STATUS_OK;
 }
+
+inline sys_err_e_t tim2_config_interrupt(uint8_t tim2_interrupt_mask_position, _Bool interrupt_state)
+{
+    if(!ASSERT_TIMER_INTERRUPT_FLAG(tim2_interrupt_mask_position))
+    {
+        return SYS_ERROR_TIM2_INIT_INPUT_INVALID_INTERRUPT_FLAG;
+    }
+    if(interrupt_state)
+    {
+        TIMSK1 |= (1<<tim2_interrupt_mask_position);
+    }
+    else
+    {
+        TIMSK1 &= ~(1<<tim2_interrupt_mask_position);
+    }
+    return SYS_STATUS_OK;
+}
+
