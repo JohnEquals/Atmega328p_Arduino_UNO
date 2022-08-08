@@ -64,15 +64,6 @@ typedef enum
  *     ex:  I2C-> twbr & TWINT returns the setting for TWINT bitfield
  */
 
-//TWCR
-#define TWINT   (0x80U) // use to poll for interrupt flag
-#define TWEA    (0x40U)
-#define TWSTA   (0x20U)
-#define TWSTO   (0x10U)
-#define TWWC   (0x08U)  // use to poll for write collison flag
-#define TWEN   (0x04U)
-#define TWIE   (0x01U)
-
 //TWSR
 #define TWS     (0xF8U)
 #define TWPS    (0x03U)

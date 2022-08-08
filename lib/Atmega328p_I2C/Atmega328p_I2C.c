@@ -1,5 +1,5 @@
 #include "Atmega328p_I2C.h"
-
+#include "avr\io.h"
 
 #define READ_MODE   ((0x01U))
 #define WRITE_MODE    (~(0x01U))
@@ -106,6 +106,8 @@ i2c_error_t i2c_master_transmit_data(uint8_t *data, uint8_t len, uint8_t slaveAd
 i2c_error_t i2c_master_receive_data(uint8_t *dataBuffer, uint8_t len)
 {
     // generate 
+    i2c_error_t status = 0;
+    return status;
 }
 
 

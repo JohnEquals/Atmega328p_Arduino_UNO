@@ -6,5 +6,6 @@
         "io.h": "c",
         "interrupt.h": "c",
         "atmega328p_sys.h": "c"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }

@@ -4,14 +4,7 @@
 #include <stdint.h>
 #include <Arduino_UNO_sys.h>
 
-// registers
-#define UDR0  	(*((volatile uint8_t *) 0xc6U))  // data register
-#define UBRR0H  (*((volatile uint8_t *) 0xc5U))
-#define UBRR0L	(*((volatile uint8_t *) 0xc4U))
-#define UBRR0	(*((volatile uint16_t *) 0xc4U))
-#define UCSR0C	(*((volatile uint8_t *) 0xc2U))
-#define UCSR0B	(*((volatile uint8_t *) 0xc1U))
-#define UCSR0A	(*((volatile uint8_t *) 0xc0U))
+
 // bitfield definitions
 #define U2XN			1
 #define TXENN			3

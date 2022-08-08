@@ -2,7 +2,7 @@
 
 // Private macros.
 #define VREF_IN_MILLIVOLTS  (5.0f)
-#define NULL_VALUE (0xffffffffU)
+#define NULL_VALUE          (0xffffU)
 
 
 

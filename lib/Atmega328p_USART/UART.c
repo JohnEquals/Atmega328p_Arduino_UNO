@@ -1,5 +1,6 @@
 #include "UART.h"
 #include <stdint.h>
+#include "avr\io.h"
 
 void uart_txConfig(void){
 	// set async mode

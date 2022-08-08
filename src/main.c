@@ -122,14 +122,15 @@ void test_timer1(void)
 	pinConfig(PIN2, PORT_B, OUTPUT_PIN, PULLUP_DISABLED);
 
 	// pwm frequency handle
-	tim1_config_handle_t htim1 = {0}; 
-	htim1.waveform_gen_mode = MODE_11;
-	htim1.channel = TIM_CHANNEL_A;
-	htim1.compare_output_mode = CLEAR_OC1_UP_SET_OC1_DOWN;
-	htim1.clock_prescale = CLK_PRESCALE_BY_256;
+	tim_config_handle_t htim1 = {0}; 
+	htim1.waveform_gen_mode = TIM_WGM_MODE_11;
+	//htim1.channel = TIM_CHANNEL_A;
+	htim1.compare_output_mode_a = TIM_COM_PHASE_CORRECT_PWM_SET_OCXN_UP_CLEAR_OCXN_DOWN;
+	htim1.compare_output_mode_b = TIM_COM_NORMAL;
+	htim1.clock_prescale = TIM_DIV_BY_256;
 	//htim1.pwm_freq = 50U;
 
-	tim1_init(htim1);
+	tim1_init(&htim1);
 	//pwm_set_duty_cycle((uint8_t)PWM_DUTY_CYCLE_7_5);
 	// pwm duty cycle handle
 	//tim1_config_handle_t htim1_duty_cycle = {0}; 
