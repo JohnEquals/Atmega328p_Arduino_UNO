@@ -133,10 +133,10 @@ void dht11_readDataaulh(dht_handle_t * h_dht11)
     {
         for(uint8_t i = 7; i > 0; i--)
         {
-            if(dht11_getPinState == LOW)
+            if(dht11_getPinState() == LOW)
             {
                 usec_delay(50U);
-                if(dht11_getPinState == HIGH)  
+                if(dht11_getPinState() == HIGH)  
                 {
                     usec_delay(28U);
                     if(dht11_getPinState == HIGH)  

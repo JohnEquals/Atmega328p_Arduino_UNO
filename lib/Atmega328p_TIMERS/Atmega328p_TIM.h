@@ -83,6 +83,10 @@
 #define TIM_TCCR1B_CS_MSK    ((1 << CS12) | (1 << CS11) | (1 << CS10))
 #define TIM_TCCR2B_CS_MSK    ((1 << CS22) | (1 << CS21) | (1 << CS20))
 
+#define TIM_INPUT_CAPTURE_EDGE_SELECT_FALLING_EDGE  (0)
+#define TIM_INPUT_CAPTURE_EDGE_SELECT_RISING_EDGE   (1)
+
+
 typedef struct 
 {
     uint16_t waveform_gen_mode      :4;
@@ -103,12 +107,34 @@ typedef struct
 
 //TODO: update APIs
 sys_err_e_t tim0_init(tim_config_handle_t * htim0);
-
-sys_err_e_t tim0_set_count(uint8_t tick_count);
-inline uint8_t tim0_get_count(void);
 sys_err_e_t tim0_config_interrupt(uint8_t tim0_interrupt_mask_position, _Bool interrupt_state);
+sys_err_e_t tim0_set_count(uint8_t tick_count);
+uint8_t tim0_get_count(void);
+sys_err_e_t tim0_set_ocr0(uint8_t top, uint8_t channel);
+sys_err_e_t tim0_clear_interrupt_flag(uint8_t flag);
+
 
 sys_err_e_t tim1_init(tim_config_handle_t * htim1);
-sys_err_e_t tim2_init(tim_config_handle_t * htim2);
+sys_err_e_t tim1_config_interrupt(uint8_t tim1_interrupt_mask_position, _Bool interrupt_state);
+sys_err_e_t tim1_set_count(uint16_t tick_count);
+inline uint8_t tim1_get_count(void);
+sys_err_e_t tim1_set_ocr1(uint16_t top, uint8_t channel);
+sys_err_e_t tim1_clear_interrupt_flag(uint8_t flag);
+uint16_t tim1_read_icr(void);
+void tim1_set_icr(uint16_t top);
+sys_err_e_t tim1_input_pin_filter_config(_Bool enable);
+sys_err_e_t tim1_input_pin_capture_edge_config(uint8_t edge);
 
+/**
+ * @brief Initializes Timer2 
+ * 
+ * @param htim2 - handler for user-defined timer2 configuration settings
+ * @return sys_err_e_t 
+ */
+sys_err_e_t tim2_init(tim_config_handle_t * htim2);
+inline sys_err_e_t tim2_config_interrupt(uint8_t tim2_interrupt_mask_position, _Bool interrupt_state)
+sys_err_e_t tim2_set_count(uint8_t tick_count);
+inline uint8_t tim2_get_count(void);
+sys_err_e_t tim2_set_ocr2(uint8_t top, uint8_t channel);
+sys_err_e_t tim2_clear_interrupt_flag(uint8_t flag);
 #endif
