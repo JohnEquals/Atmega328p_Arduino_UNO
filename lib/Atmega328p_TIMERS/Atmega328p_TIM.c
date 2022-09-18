@@ -81,7 +81,7 @@
                                                     (TIMER_8BIT_MIN_VALUE <= counts)\
                                                     )
 
-#define ASSERT_16BIT_TIMER_COUNT(counts)             (\
+#define ASSERT_16BIT_TIMER_COUNT(counts)            (\
                                                     (TIMER_16BIT_MAX_VALUE >= counts)&&\
                                                     (TIMER_16BIT_MIN_VALUE <= counts)\
                                                     )

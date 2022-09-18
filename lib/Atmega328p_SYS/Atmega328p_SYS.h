@@ -7,13 +7,11 @@
 
 #define SYS_CLK_FREQ    SYS_CLK_FREQ_IN_MHZ
 
-#define DISABLE_INTERRUPTS      (do{uint8_t sreg_data = SREG; \
+#define DISABLE_INTERRUPTS()    do{uint8_t sreg_data = SREG; \
                                 cli(); \
-                                }while(0))
+                                }while(0)
 
-#define ENABLE_INTERRUPTS       (do{uint8_t sreg_data = SREG; \
-                                cli(); \
-                                }while(0))
+#define ENABLE_INTERRUPTS()     (SREG = sreg)
 
 
 // DHT11 data pin - PB0 - D8

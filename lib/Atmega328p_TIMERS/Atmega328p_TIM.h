@@ -117,7 +117,7 @@ sys_err_e_t tim0_clear_interrupt_flag(uint8_t flag);
 sys_err_e_t tim1_init(tim_config_handle_t * htim1);
 sys_err_e_t tim1_config_interrupt(uint8_t tim1_interrupt_mask_position, _Bool interrupt_state);
 sys_err_e_t tim1_set_count(uint16_t tick_count);
-inline uint8_t tim1_get_count(void);
+uint8_t tim1_get_count(void);
 sys_err_e_t tim1_set_ocr1(uint16_t top, uint8_t channel);
 sys_err_e_t tim1_clear_interrupt_flag(uint8_t flag);
 uint16_t tim1_read_icr(void);
@@ -132,9 +132,9 @@ sys_err_e_t tim1_input_pin_capture_edge_config(uint8_t edge);
  * @return sys_err_e_t 
  */
 sys_err_e_t tim2_init(tim_config_handle_t * htim2);
-inline sys_err_e_t tim2_config_interrupt(uint8_t tim2_interrupt_mask_position, _Bool interrupt_state)
+sys_err_e_t tim2_config_interrupt(uint8_t tim2_interrupt_mask_position, _Bool interrupt_state);
 sys_err_e_t tim2_set_count(uint8_t tick_count);
-inline uint8_t tim2_get_count(void);
+uint8_t tim2_get_count(void);
 sys_err_e_t tim2_set_ocr2(uint8_t top, uint8_t channel);
 sys_err_e_t tim2_clear_interrupt_flag(uint8_t flag);
 #endif
