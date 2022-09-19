@@ -7,6 +7,57 @@
 #include <avr\interrupt.h>
 #include <string.h>
 
+static uint8_t tim0_clock_prescale_setting = 0;
+static uint8_t tim1_clock_prescale_setting = 0;
+static uint8_t tim2_clock_prescale_setting = 0;
+
+static void tim0_set_clock_prescaler(uint8_t prescale_val)
+{
+    tim0_clock_prescale_setting = prescale_val;
+}
+
+static uint8_t tim0_get_clock_prescaler(void)
+{
+    return tim0_clock_prescale_setting;
+}
+
+static void tim1_set_clock_prescaler(uint8_t prescale_val)
+{
+    tim1_clock_prescale_setting = prescale_val;
+}
+
+static uint8_t tim1_get_clock_prescaler(void)
+{
+    return tim1_clock_prescale_setting;
+}
+
+static void tim2_set_clock_prescaler(uint8_t prescale_val)
+{
+    tim2_clock_prescale_setting = prescale_val;
+}
+
+static uint8_t tim2_get_clock_prescaler(void)
+{
+    return tim2_clock_prescale_setting;
+}
+
+// default macros for Timer clock frequency
+#define TIM1_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ)
+#define TIM1_DEFAULT_MAX_TICKS_IN_MS    (4U) 
+#define TIM1_DEFAULT_MAX_TICKS_IN_US    (4095U)
+#define TIM1_MAX_ACCURATE_COUNTS_IN_US  (TIM1_DEFAULT_MAX_TICKS_IN_US)
+#define TIM1_MAX_ACCURATE_COUNTS_IN_MS  (TIM1_DEFAULT_MAX_TICKS_IN_MS)   
+
+#define TIM0_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ)
+#define TIM0_MAX_ACCURATE_COUNTS_IN_US  (UINT8_MAX/TIM0_CLK_FREQ) // 16MHz -> 15 us max count
+
+#define TIM2_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ)
+#define TIM2_MAX_ACCURATE_COUNTS_IN_US  (UINT8_MAX/TIM2_CLK_FREQ)  // 16MHz -> 15 us max count
+/**
+ *   TIM1 is ideal for usec/msec delay (blocking and interrupt versions) since it has the resolution (16-bit)
+ * 
+ */
+
 #define GET_PRESCALE_VALUE(cs_bits)     ( \
                                         (cs_bits==CLK_NO_PRESCALE)?1U:\
                                         (cs_bits==CLK_PRESCALE_BY_8)?8U:\
@@ -219,12 +270,54 @@ sys_err_e_t tim0_init(tim_config_handle_t * htim0)
         temp_reg1 |= (1 << COM0A1) | (1 << COM0A0);
     }
 
-    // configure clock 
-    temp_reg2 |= (htim0->clock_prescale <<CS00);   
-    
+    // configure internal clock settings.  Leave timer disable.  Only enable on interrupt init or with blocking delay 
+    // temp_reg2 |= (htim0->clock_prescale <<CS00);   
+    tim0_set_clock_prescaler(htim0->clock_prescale);
+
     // configure settings
     TCCR0A = temp_reg1;
     TCCR0B = temp_reg2; 
+
+        // set macros for time generation
+    switch(htim0->clock_prescale)
+    {
+        case TIM_NO_PRESCALE:
+        {
+#undef TIM0_CLK_FREQ
+#define TIM0_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ)
+            break;
+        }
+        case TIM_DIV_BY_8:
+        {
+#undef TIM0_CLK_FREQ
+#define TIM0_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ/8U)
+            break;
+        }
+        default:
+        {
+            // invalid clock frequency for microsecond timer if TIM2 clock freq < 1 MHz
+            // since clock speed is too slow
+            break;
+        }
+    }
+
+/**
+ * @brief TIM0_MAX_ACCURATE_COUNTS_IN_US/_MS is the total number of microseconds/millseconds that can be counted
+ *        accurately.  
+ * 
+ *        Calculations:
+ *        1/(Timer0 clock frequency) = period of TIM0 = how many seconds it takes for TIM0 to count 1 tick
+ *        ticks of TIM0 to count 1 ms = 1 ms/(period of TIM0)
+ *        ticks of TIM0 to count 1 us = 1 us/(period of TIM0)
+ *        (resolution of TIM0)/(ticks of TIM0 to count 1 ms) = highest time tim0 can count with accuracy in ms
+ *        (resolution of TIM0)/(ticks of TIM0 to count 1 us) = highest time tim0 can count with accuracy in us
+ * 
+ * @note  The above formulas can be used generally for figuring out these values.  Note that the results should be
+ *        integers to be valid values.     
+ */
+
+#undef  TIM0_MAX_ACCURATE_COUNTS_IN_US
+#define TIM0_MAX_ACCURATE_COUNTS_IN_US  (UINT8_MAX/(TIM0_CLK_FREQ*SYS_1_MHZ_IN_HZ))
 
     SREG = sreg_data;
 
@@ -284,6 +377,29 @@ uint8_t tim0_get_count(void)
     return TCNT0;
 }
 
+
+void tim0_usec_delay(uint16_t time_in_microseconds)
+{   
+    #ifdef TIM0_MAX_ACCURATE_COUNTS_IN_US
+
+        uint8_t clk_prescale = tim0_get_clock_prescaler(); 
+        TCCR0B &= clk_prescale;  // turn on timer
+
+        if(TIM0_MAX_ACCURATE_COUNTS_IN_US < time_in_microseconds)
+        {
+            time_in_microseconds = TIM0_MAX_ACCURATE_COUNTS_IN_US;
+        }
+        // reset timer for counting
+        TCNT0 = 0;  
+
+        // wait for timer to expire
+        while(TCNT0 < (time_in_microseconds * clk_prescale))
+            asm volatile("nop");
+        // turn off timer
+        TCCR0B = 0;
+    #endif
+}
+
 sys_err_e_t tim0_set_ocr0(uint8_t top, uint8_t channel)
 {
     //uint8_t sreg_data = SREG;
@@ -325,6 +441,28 @@ sys_err_e_t tim0_clear_interrupt_flag(uint8_t flag)
         return SYS_ERROR_TIM0_INIT_INPUT_INVALID_INTERRUPT_FLAG;
     }
     return SYS_STATUS_OK;
+}
+
+void tim1_usec_delay(uint16_t time_in_microseconds)
+{   
+    #ifdef TIM1_MAX_ACCURATE_COUNTS_IN_US
+
+        uint8_t tim1_clk_prescale = tim1_get_clock_prescaler(); 
+        TCCR1B &= tim1_clk_prescale;  // turn on timer
+
+        if(TIM1_MAX_ACCURATE_COUNTS_IN_US < time_in_microseconds)
+        {
+            time_in_microseconds = TIM1_MAX_ACCURATE_COUNTS_IN_US;
+        }
+        // reset timer for counting
+        TCNT1 = 0;  
+
+        // wait for timer to expire
+        while(TCNT1 < (time_in_microseconds * tim1_clk_prescale))
+            asm volatile("nop");
+        // turn off timer
+        TCCR1B = 0;
+    #endif
 }
 
 // TODO:  implement input capture feature
@@ -475,8 +613,53 @@ sys_err_e_t tim1_init(tim_config_handle_t * htim1)
         temp_reg1 |= (1 << COM1A1) | (1 << COM1A0);
     }
 
-    // configure clock 
-    temp_reg2 |= (htim1->clock_prescale <<CS10);   
+    // configure internal clock settings.  Leave timer disable.  Only enable on interrupt init or with blocking delay 
+    // temp_reg2 |= (htim1->clock_prescale <<CS10);   
+    tim1_set_clock_prescaler(htim1->clock_prescale);
+
+        // set macros for time generation
+    switch(htim1->clock_prescale)
+    {
+        case TIM_NO_PRESCALE:
+        {
+#undef TIM1_CLK_FREQ
+#define TIM1_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ)
+            break;
+        }
+        case TIM_DIV_BY_8:
+        {
+#undef TIM1_CLK_FREQ
+#define TIM1_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ/8U)
+            break;
+        }
+        default:
+        {
+            // invalid clock frequency for microsecond timer if TIM1 clock freq < 1 MHz
+            // since clock speed is too slow
+            break;
+        }
+    }
+
+/**
+ * @brief TIM1_MAX_ACCURATE_COUNTS_IN_US/_MS is the total number of microseconds/millseconds that can be counted
+ *        accurately.  
+ * 
+ *        Calculations:
+ *        1/(Timer1 clock frequency) = period of TIM1 = how many seconds it takes for TIM1 to count 1 tick
+ *        ticks of TIM1 to count 1 ms = 1 ms/(period of TIM1)
+ *        ticks of TIM1 to count 1 us = 1 us/(period of TIM1)
+ *        (resolution of TIM1)/(ticks of TIM1 to count 1 ms) = highest time tim1 can count with accuracy in ms
+ *        (resolution of TIM1)/(ticks of TIM1 to count 1 us) = highest time tim1 can count with accuracy in us
+ * 
+ * @note  The above formulas can be used generally for figuring out these values.  Note that the results should be
+ *        integers to be valid values.     
+ */
+
+#undef  TIM1_MAX_ACCURATE_COUNTS_IN_US
+#undef  TIM1_MAX_ACCURATE_COUNTS_IN_MS
+#define TIM1_MAX_ACCURATE_COUNTS_IN_US  (UINT16_MAX/(TIM1_CLK_FREQ))
+#define TIM1_MAX_ACCURATE_COUNTS_IN_MS  (UINT16_MAX/(TIM1_CLK_FREQ*SYS_1_MHZ_IN_HZ))
+
     
     temp_reg1 |= 1 << ICNC1; //  
 
@@ -749,14 +932,54 @@ sys_err_e_t tim2_init(tim_config_handle_t * htim2)
         temp_reg1 |= (1 << COM2A1) | (1 << COM2A0);
     }
 
-    // configure clock 
-    temp_reg2 |= (htim2->clock_prescale <<CS20);   
-    
+    // configure internal clock settings.  Leave timer disable.  Only enable on interrupt init or with blocking delay 
+    // temp_reg2 |= (htim2->clock_prescale <<CS20);   
+    tim2_set_clock_prescaler(htim2->clock_prescale);
+
+        // set macros for time generation
+    switch(htim2->clock_prescale)
+    {
+        case TIM_NO_PRESCALE:
+        {
+#undef TIM2_CLK_FREQ
+#define TIM2_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ)
+            break;
+        }
+        case TIM_DIV_BY_8:
+        {
+#undef TIM2_CLK_FREQ
+#define TIM2_CLK_FREQ                   (SYS_CLK_FREQ_IN_MHZ/8U)
+            break;
+        }
+        default:
+        {
+            // invalid clock frequency for microsecond timer if TIM2 clock freq < 1 MHz
+            // since clock speed is too slow
+            break;
+        }
+    }
+
+/**
+ * @brief TIM2_MAX_ACCURATE_COUNTS_IN_US/_MS is the total number of microseconds/millseconds that can be counted
+ *        accurately.  
+ * 
+ *        Calculations:
+ *        1/(Timer2 clock frequency) = period of TIM2 = how many seconds it takes for TIM2 to count 1 tick
+ *        ticks of TIM2 to count 1 ms = 1 ms/(period of TIM2)
+ *        ticks of TIM2 to count 1 us = 1 us/(period of TIM2)
+ *        (resolution of TIM2)/(ticks of TIM2 to count 1 ms) = highest time tim2 can count with accuracy in ms
+ *        (resolution of TIM2)/(ticks of TIM2 to count 1 us) = highest time tim2 can count with accuracy in us
+ * 
+ * @note  The above formulas can be used generally for figuring out these values.  Note that the results should be
+ *        integers to be valid values.     
+ */
+
+#undef  TIM2_MAX_ACCURATE_COUNTS_IN_US
+#define TIM2_MAX_ACCURATE_COUNTS_IN_US  (UINT8_MAX/(TIM2_CLK_FREQ*SYS_1_MHZ_IN_HZ))
+
     // configure settings
     TCCR2A = temp_reg1;
     TCCR2B = temp_reg2; 
-
-
 
     SREG = sreg_data;
 
@@ -853,4 +1076,24 @@ sys_err_e_t tim2_clear_interrupt_flag(uint8_t flag)
     return SYS_STATUS_OK;
 }
 
- 
+ void tim2_usec_delay(uint16_t time_in_microseconds)
+{   
+    #ifdef TIM2_MAX_ACCURATE_COUNTS_IN_US
+
+        uint8_t clk_prescale = tim2_get_clock_prescaler(); 
+        TCCR2B &= clk_prescale;  // turn on timer
+
+        if(TIM2_MAX_ACCURATE_COUNTS_IN_US < time_in_microseconds)
+        {
+            time_in_microseconds = TIM2_MAX_ACCURATE_COUNTS_IN_US;
+        }
+        // reset timer for counting
+        TCNT2 = 0;  
+
+        // wait for timer to expire
+        while(TCNT2 < (time_in_microseconds * clk_prescale))
+            asm volatile("nop");
+        // turn off timer
+        TCCR2B = 0;
+    #endif
+}

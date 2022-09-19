@@ -13,6 +13,10 @@
 #define COM_MODE_3  (3U)
 
 // COMxA/COMxB modes where x = 0,1 and n = A,B
+/**
+ * @brief Possible settings for compare_output_mode_a/b member of tim_config_handle_t instance
+ * 
+ */
 #define TIM_COM_NORMAL                       COM_MODE_0  
 
 #define TIM_COM_NONPWM_TOGGLE_OCXN_MATCH          COM_MODE_1
@@ -29,6 +33,10 @@
 
 
 // Timerx Waveform Generation Modes (bitfield values for WGMx1_0)
+/**
+ * @brief Possible settings for waveform_gen_mode member of tim_config_handle_t instance
+ * 
+ */
 #define TIM_WGM_MODE_0  (0U)  // Normal; TOP = 0xFFFF
 #define TIM_WGM_MODE_1  (1U)  // PWM, phase correct, 8-bit; TOP = 0x00FF
 #define TIM_WGM_MODE_2  (2U)  // PWM, phase correct, 9-bit; TOP = 0x01FF
@@ -59,6 +67,10 @@
 #define TIM_CHANNEL_B   (1U)
 
 // Clock Select bit (CSx0/CSx1) values
+/**
+ * @brief Possible settings for clock_prescale member of tim_config_handle_t instance
+ * 
+ */
 #define TIM_NO_PRESCALE	    1U
 #define TIM_DIV_BY_8		2U
 #define TIM_DIV_BY_64		3U
@@ -71,6 +83,9 @@
 #define TIMER_16BIT_MAX_VALUE (65535U)
 #define TIMER_16BIT_MIN_VALUE (0U)
 
+#define TIM0_MAX_TICK (TIMER_8BIT_MAX_VALUE)
+#define TIM1_MAX_TICK (TIMER_16BIT_MAX_VALUE)
+#define TIM2_MAX_TICK (TIMER_8BIT_MAX_VALUE)
 
 // timer interrupt flags
 #define TIM_INTERRUPT_INPUT_CAPTURE_FLAG    (5)
@@ -89,19 +104,18 @@
 
 typedef struct 
 {
-    uint16_t waveform_gen_mode      :4;
+    uint16_t waveform_gen_mode      :4;  // see TIM_WGM_MODES
     //uint16_t channel                :1;  
-    uint16_t compare_output_mode_a  :2;
-    uint16_t compare_output_mode_b  :2;
-    uint16_t clock_prescale         :3;   
+    uint16_t compare_output_mode_a  :2;  // see TIM_COM MODES/COM_MODES
+    uint16_t compare_output_mode_b  :2;  // see TIM_COM MODES/COM_MODES
+    uint16_t clock_prescale         :3;  // see TIM_DIV options
     uint16_t reserved               :5;
     uint16_t pwm_freq               ;
     uint8_t duty_cycle              ;
 }tim_config_handle_t;
 
 
-// Timer1 Macros
-#define TIM1_MAX_TIMER_TICKS (32767U) // Valid for TIM1 CLK Freq = 2 MHz.  Equal to UINT16_MAX/2 
+
 
 // API Prototypes
 

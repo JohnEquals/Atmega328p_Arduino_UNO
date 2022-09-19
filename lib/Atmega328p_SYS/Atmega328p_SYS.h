@@ -4,6 +4,7 @@
 #include <avr\io.h>
 
 #define SYS_CLK_FREQ_IN_MHZ    (16U)
+#define SYS_1_MHZ_IN_HZ        (1000000U)
 
 #define SYS_CLK_FREQ    SYS_CLK_FREQ_IN_MHZ
 
